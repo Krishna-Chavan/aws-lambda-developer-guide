@@ -1,0 +1,32 @@
+pipeline {
+    agent any
+    
+    stages {
+        stage('Build') {
+            steps {
+                // Add your build steps here, e.g., building a Java project and creating the ZIP file
+                sh 'gradle build'
+                sh 'zip -r build/distributions/java-basic.zip build/libs/*'
+            }
+        }
+        
+        stage('Deploy') {
+            steps {
+                withAWS(credentials: 'aws-credentials') {
+                    cfnCreateChangeSet(
+                        region: 'us-west-2',
+                        stackName: 'my-stack',
+                        templatePath: 'cloudformation-template.yml',
+                        changeSetName: 'my-changeset',
+                        capabilities: 'CAPABILITY_IAM'
+                    )
+                    cfnExecuteChangeSet(
+                        region: 'us-west-2',
+                        stackName: 'my-stack',
+                        changeSetName: 'my-changeset'
+                    )
+                }
+            }
+        }
+    }
+}

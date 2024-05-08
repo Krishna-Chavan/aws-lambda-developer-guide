@@ -1,0 +1,29 @@
+pipeline {
+    agent any
+    stages {
+        stage('Checkout') {
+            steps {
+                // Checkout your source code from a version control system (e.g., Git)
+                checkout scm
+            }
+        }
+        stage('Build') {
+            steps {
+                // Build your Java project
+                sh './gradlew build'
+            }
+        }
+        stage('Package') {
+            steps {
+                // Package your Java project into a zip file
+                sh 'zip -r build/distributions/java-basic.zip build/libs/*'
+            }
+        }
+        stage('Deploy') {
+            steps {
+                // Deploy your AWS Lambda function using the AWS CLI or an AWS SDK
+                sh 'aws lambda update-function-code --function-name my-lambda-function --zip-file fileb://build/distributions/java-basic.zip'
+            }
+        }
+    }
+}

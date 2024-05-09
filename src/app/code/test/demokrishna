@@ -1,0 +1,31 @@
+pipeline {
+    agent any
+    
+    stages {
+        stage('Build') {
+            steps {
+                // Add any necessary build steps here, such as compiling the Java code and creating the ZIP file
+                sh 'gradle build'
+            }
+        }
+        
+        stage('Deploy') {
+            environment {
+                AWS_ACCESS_KEY_ID = credentials('aws-access-key')
+                AWS_SECRET_ACCESS_KEY = credentials('aws-secret-key')
+                AWS_REGION = 'us-west-2' // Replace with your desired AWS region
+            }
+            
+            steps {
+                // Install and configure AWS CLI
+                sh 'pip install awscli'
+                sh 'aws configure set aws_access_key_id $AWS_ACCESS_KEY_ID'
+                sh 'aws configure set aws_secret_access_key $AWS_SECRET_ACCESS_KEY'
+                sh 'aws configure set region $AWS_REGION'
+                
+                // Deploy the Lambda function using AWS CLI
+                sh 'aws cloudformation deploy --template-file template.yml --stack-name my-lambda-stack --capabilities CAPABILITY_IAM'
+            }
+        }
+    }
+}
